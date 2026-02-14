@@ -1,2 +1,0 @@
-# Railway deployment config for ForgeLLM backend
-providers = ["python"]
