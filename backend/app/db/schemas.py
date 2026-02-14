@@ -104,6 +104,10 @@ class TrainingJobResponse(BaseModel):
     progress: float
     current_step: int
     total_steps: Optional[int]
+    lora_r: Optional[int] = 16
+    lora_alpha: Optional[int] = 32
+    num_epochs: Optional[int] = 3
+    learning_rate: Optional[float] = 0.0002
     metrics: Optional[Dict[str, Any]]
     error_message: Optional[str]
     created_at: datetime

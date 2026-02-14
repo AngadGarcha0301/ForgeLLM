@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, datasets, training, models, inference
+from app.api import auth, datasets, training, models, inference, workspaces
 from app.config import settings
 
 app = FastAPI(
@@ -21,6 +21,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(workspaces.router, prefix="/api/v1/workspaces", tags=["workspaces"])
 app.include_router(datasets.router, prefix="/api/v1/datasets", tags=["datasets"])
 app.include_router(training.router, prefix="/api/v1/training", tags=["training"])
 app.include_router(models.router, prefix="/api/v1/models", tags=["models"])

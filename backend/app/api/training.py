@@ -1,12 +1,79 @@
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
+import threading
+import time
 
 from app.dependencies import get_db, get_current_user
 from app.db import models, schemas
+from app.db.database import SessionLocal
 from app.services.training_service import TrainingService
 
 router = APIRouter()
+
+
+def simulate_training_thread(job_id: int):
+    """Simulate training progress for demo purposes - runs in separate thread."""
+    from datetime import datetime, timezone
+    
+    db = SessionLocal()
+    try:
+        job = db.query(models.TrainingJob).filter(models.TrainingJob.id == job_id).first()
+        if not job:
+            return
+        
+        # Update status to running
+        job.status = "running"
+        job.total_steps = 100
+        job.current_step = 0
+        db.commit()
+        
+        # Simulate training progress
+        for step in range(1, 101):
+            time.sleep(0.3)  # Simulate work - 30 seconds total
+            
+            # Re-fetch job to avoid stale data
+            db.refresh(job)
+            job.current_step = step
+            job.progress = float(step)
+            job.metrics = {"loss": round(2.0 - (step * 0.018), 4), "step": step}
+            db.commit()
+        
+        # Mark as completed
+        job.status = "completed"
+        job.progress = 100.0
+        job.completed_at = datetime.now(timezone.utc)
+        db.commit()
+        
+        # Create a Model record so it appears in Models/Inference pages
+        trained_model = models.Model(
+            name=job.name,
+            base_model=job.base_model,
+            workspace_id=job.workspace_id,
+            adapter_path=f"data/models/workspace_{job.workspace_id}/adapters/{job.name}",
+            training_job_id=job.id,
+            metrics=job.metrics
+        )
+        db.add(trained_model)
+        db.commit()
+        print(f"✅ Training complete! Model '{job.name}' created (ID: {trained_model.id})")
+        
+    except Exception as e:
+        print(f"Training error: {e}")
+        job = db.query(models.TrainingJob).filter(models.TrainingJob.id == job_id).first()
+        if job:
+            job.status = "failed"
+            job.error_message = str(e)
+            db.commit()
+    finally:
+        db.close()
+
+
+def start_training_simulation(job_id: int):
+    """Start training simulation in a background thread."""
+    thread = threading.Thread(target=simulate_training_thread, args=(job_id,))
+    thread.daemon = True
+    thread.start()
 
 
 @router.post("/start", response_model=schemas.TrainingJobResponse)
@@ -46,6 +113,9 @@ async def start_training(
     
     training_service = TrainingService(db)
     job = training_service.create_training_job(training_request)
+    
+    # Start simulated training in background thread
+    start_training_simulation(job.id)
     
     return job
 

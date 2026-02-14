@@ -8,11 +8,11 @@ class Settings(BaseSettings):
     APP_NAME: str = "ForgeLLM"
     DEBUG: bool = True
     
-    # Database
-    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/forgellm"
+    # Database (using psycopg v3 driver)
+    DATABASE_URL: str = "postgresql+psycopg://postgres:postgres@localhost:15432/forgellm"
     
     # Redis
-    REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_URL: str = "redis://localhost:16379/0"
     
     # JWT
     SECRET_KEY: str = "your-secret-key-change-in-production"
@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # CORS
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
+    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000", "http://localhost:10801"]
     
     # Storage
     UPLOAD_DIR: str = "./data/uploads"

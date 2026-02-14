@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="flameGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#ea580c;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fb923c;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Anvil base -->
+  <path d="M20 75 L80 75 L85 85 L15 85 Z" fill="#374151"/>
+  <path d="M25 65 L75 65 L80 75 L20 75 Z" fill="#4b5563"/>
+  <!-- Flame/Forge fire -->
+  <path d="M50 20 Q60 35 55 45 Q65 40 60 55 Q70 50 62 65 L50 65 L38 65 Q30 50 40 55 Q35 40 45 45 Q40 35 50 20" fill="url(#flameGradient)"/>
+  <!-- Inner flame -->
+  <path d="M50 30 Q55 40 52 48 Q58 45 54 55 L50 58 L46 55 Q42 45 48 48 Q45 40 50 30" fill="#fef3c7"/>
+  <!-- Hammer -->
+  <rect x="44" y="50" width="12" height="8" rx="1" fill="#6b7280"/>
+  <rect x="48" y="55" width="4" height="15" fill="#78716c"/>
+</svg>

@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
 
-from app.dependencies import get_db
+from app.dependencies import get_db, get_current_user
 from app.db import models, schemas
 from app.core.security import verify_password, get_password_hash, create_access_token
 from app.config import settings
@@ -56,8 +56,10 @@ async def login(
     db: Session = Depends(get_db)
 ):
     """Login and get access token."""
+    # Try to find user by email or username
     user = db.query(models.User).filter(
-        models.User.email == form_data.username
+        (models.User.email == form_data.username) | 
+        (models.User.username == form_data.username)
     ).first()
     
     if not user or not verify_password(form_data.password, user.hashed_password):
@@ -78,8 +80,7 @@ async def login(
 
 @router.get("/me", response_model=schemas.UserResponse)
 async def get_current_user_info(
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_db)
+    current_user: models.User = Depends(get_current_user)
 ):
     """Get current user info."""
     return current_user

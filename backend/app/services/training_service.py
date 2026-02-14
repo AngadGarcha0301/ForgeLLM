@@ -49,21 +49,34 @@ class TrainingService:
     
     def _queue_training_job(self, job_id: int) -> str:
         """Queue a training job for Celery worker processing."""
-        from workers.tasks import run_training_job
-        
-        # Send to Celery
-        task = run_training_job.delay(job_id)
-        
-        # Update job with task ID
-        job = self.db.query(models.TrainingJob).filter(
-            models.TrainingJob.id == job_id
-        ).first()
-        
-        if job:
-            job.celery_task_id = task.id
-            self.db.commit()
-        
-        return task.id
+        try:
+            from workers.tasks import run_training_job
+            
+            # Send to Celery
+            task = run_training_job.delay(job_id)
+            
+            # Update job with task ID
+            job = self.db.query(models.TrainingJob).filter(
+                models.TrainingJob.id == job_id
+            ).first()
+            
+            if job:
+                job.celery_task_id = task.id
+                self.db.commit()
+            
+            return task.id
+        except ImportError:
+            # Celery workers not available - mark job as queued for manual processing
+            job = self.db.query(models.TrainingJob).filter(
+                models.TrainingJob.id == job_id
+            ).first()
+            
+            if job:
+                job.status = "queued"
+                job.celery_task_id = f"local_{job_id}"
+                self.db.commit()
+            
+            return f"local_{job_id}"
     
     def get_job_status(self, job_id: int) -> Optional[dict]:
         """Get the current status of a training job."""
