@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14
+    container_name: forgellm-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: forgellm
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Celery
+  redis:
+    image: redis:7-alpine
+    container_name: forgellm-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: .
+      dockerfile: infra/docker/backend.Dockerfile
+    container_name: forgellm-backend
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/forgellm
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=your-secret-key-change-in-production
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./backend:/app/backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Celery Worker (for training jobs)
+  worker:
+    build:
+      context: .
+      dockerfile: infra/docker/worker.Dockerfile
+    container_name: forgellm-worker
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/forgellm
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./data:/app/data
+      - ./backend:/app/backend
+      - ./ml:/app/ml
+      - ./workers:/app/workers
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # For GPU support, uncomment:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    command: celery -A workers.celery_app worker --loglevel=info
+
+  # Celery Beat (for scheduled tasks)
+  celery-beat:
+    build:
+      context: .
+      dockerfile: infra/docker/worker.Dockerfile
+    container_name: forgellm-beat
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/forgellm
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./workers:/app/workers
+    depends_on:
+      - redis
+    command: celery -A workers.celery_app beat --loglevel=info
+
+volumes:
+  postgres_data:
+  redis_data:

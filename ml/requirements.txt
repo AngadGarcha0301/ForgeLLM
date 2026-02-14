@@ -1,0 +1,26 @@
+# PyTorch (CUDA 11.8)
+torch==2.1.2
+torchvision==0.16.2
+torchaudio==2.1.2
+
+# Transformers and PEFT
+transformers==4.37.2
+peft==0.8.2
+accelerate==0.26.1
+bitsandbytes==0.42.0
+
+# Datasets
+datasets==2.16.1
+
+# Training utilities
+tqdm==4.66.1
+safetensors==0.4.2
+
+# Evaluation
+evaluate==0.4.1
+rouge-score==0.1.2
+nltk==3.8.1
+
+# Tokenizers
+sentencepiece==0.1.99
+tokenizers==0.15.1
