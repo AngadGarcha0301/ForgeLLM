@@ -17,11 +17,6 @@ services:
         fromDatabase:
           name: forgellm-db
           property: connectionString
-      - key: REDIS_URL
-        fromService:
-          name: forgellm-redis
-          type: redis
-          property: connectionString
       - key: SECRET_KEY
         generateValue: true
       - key: DEMO_MODE
@@ -33,7 +28,6 @@ services:
   - type: web
     name: forgellm-app
     runtime: static
-    region: oregon
     plan: free
     buildCommand: |
       cd frontend && npm install && npm run build
@@ -52,13 +46,6 @@ services:
           name: forgellm-api
           type: web
           property: host
-          
-  # Redis
-  - type: redis
-    name: forgellm-redis
-    region: oregon
-    plan: free
-    maxmemoryPolicy: noeviction
 
 # PostgreSQL Database
 databases:
