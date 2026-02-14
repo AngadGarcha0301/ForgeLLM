@@ -7,7 +7,6 @@ services:
     name: forgellm-api
     runtime: python
     region: oregon
-    plan: free
     buildCommand: |
       cd backend && pip install -r requirements.txt
     startCommand: |
@@ -28,7 +27,6 @@ services:
   - type: web
     name: forgellm-app
     runtime: static
-    plan: free
     buildCommand: |
       cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
@@ -51,6 +49,5 @@ services:
 databases:
   - name: forgellm-db
     region: oregon
-    plan: free
     databaseName: forgellm
     user: forgellm
