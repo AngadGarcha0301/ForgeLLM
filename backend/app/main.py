@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import auth, datasets, training, models, inference, workspaces
 from app.config import settings
+from app.db.database import init_db
 
 app = FastAPI(
     title="ForgeLLM",
@@ -13,7 +14,7 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=["*"],  # Allow all origins for cloud deployment
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -26,6 +27,12 @@ app.include_router(datasets.router, prefix="/api/v1/datasets", tags=["datasets"]
 app.include_router(training.router, prefix="/api/v1/training", tags=["training"])
 app.include_router(models.router, prefix="/api/v1/models", tags=["models"])
 app.include_router(inference.router, prefix="/api/v1/inference", tags=["inference"])
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database tables on startup"""
+    init_db()
 
 
 @app.get("/health")
